@@ -159,7 +159,7 @@ Optimized for quick retrieval (~ms level response**).
 
 ## 6. Project Structure
 
-
+```bash
 .
 ├── main.py               # FastAPI backend (all search endpoints)
 ├── app.py                # Streamlit frontend (UI for search)
@@ -182,4 +182,5 @@ Optimized for quick retrieval (~ms level response**).
 * Clear & well-documented *README.md*
 
 ---
+
 
