@@ -30,6 +30,12 @@ sql
 CREATE DATABASE medicinedb;
 \c medicinedb
 
+<img width="1817" height="1012" alt="pharma1" src="https://github.com/user-attachments/assets/08c56c5e-742e-4f47-bdf6-008bb5b62428" />
+<img width="1918" height="1006" alt="pharma2" src="https://github.com/user-attachments/assets/e2baca09-7472-4e8a-8b63-1a11dab4861e" />
+
+<img width="1851" height="1013" alt="pharma3" src="https://github.com/user-attachments/assets/a4454e8c-2567-4fd5-be19-09f6f4dea80e" />
+
+
 
 ### 2.2 Create Schema & Indexes
 
@@ -107,6 +113,9 @@ Run the frontend:
 bash
 streamlit run app.py
 
+<img width="1915" height="965" alt="pharma4" src="https://github.com/user-attachments/assets/2a5a3614-511c-461b-8a52-f0c0510c2727" />
+
+
 
 ---
 
@@ -173,3 +182,4 @@ Optimized for quick retrieval (~ms level response**).
 * Clear & well-documented *README.md*
 
 ---
+
