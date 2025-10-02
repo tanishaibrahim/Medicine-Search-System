@@ -1,0 +1,144 @@
+Server [localhost]:
+Database [postgres]:
+Port [5432]:
+Username [postgres]:
+Password for user postgres:
+
+psql (18.0)
+WARNING: Console code page (850) differs from Windows code page (1252)
+         8-bit characters might not work correctly. See psql reference
+         page "Notes for Windows users" for details.
+Type "help" for help.
+
+postgres=# CREATE DATABASE medicinedb;
+CREATE DATABASE
+postgres=# \c medicinedb
+You are now connected to database "medicinedb" as user "postgres".
+medicinedb=# CREATE TABLE medicines (
+medicinedb(#     id BIGINT PRIMARY KEY,
+medicinedb(#     sku_id TEXT,
+medicinedb(#     name TEXT,
+medicinedb(#     manufacturer_name TEXT,
+medicinedb(#     marketer_name TEXT,
+medicinedb(#     type TEXT,
+medicinedb(#     price NUMERIC,
+medicinedb(#     pack_size_label TEXT,
+medicinedb(#     short_composition TEXT,
+medicinedb(#     is_discontinued BOOLEAN,
+medicinedb(#     available BOOLEAN
+medicinedb(# );
+CREATE TABLE
+medicinedb=# CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION
+medicinedb=# CREATE EXTENSION IF NOT EXISTS unaccent;
+CREATE EXTENSION
+medicinedb=# -- 1️⃣ Add full-text search vector column
+medicinedb=# ALTER TABLE medicines
+medicinedb-# ADD COLUMN search_vector tsvector;
+ALTER TABLE
+medicinedb=#
+medicinedb=# -- 2️⃣ Populate it with searchable columns
+medicinedb=# UPDATE medicines
+medicinedb-# SET search_vector =
+medicinedb-#     to_tsvector('english', coalesce(name,'') || ' ' || coalesce(short_composition,'') || ' ' || coalesce(manufacturer_name,''));
+UPDATE 280227
+medicinedb=#
+medicinedb=# -- 3️⃣ Create GIN index for fast search
+medicinedb=# CREATE INDEX idx_medicines_search_vector
+medicinedb-# ON medicines
+medicinedb-# USING GIN(search_vector);
+CREATE INDEX
+medicinedb=#
+medicinedb=# -- 4️⃣ Enable fuzzy search (pg_trgm extension)
+medicinedb=# CREATE EXTENSION IF NOT EXISTS pg_trgm;
+NOTICE:  extension "pg_trgm" already exists, skipping
+CREATE EXTENSION
+medicinedb=#
+medicinedb=# -- 5️⃣ Example fuzzy search
+medicinedb=# SELECT *
+medicinedb-# FROM medicines
+medicinedb-# WHERE name % 'paracetmol'
+medicinedb-# ORDER BY similarity(name, 'paracetmol') DESC
+medicinedb-# LIMIT 5;
+   id   | sku_id |           name           |    manufacturer_name    |      marketer_name      |   type    | price  |    pack_size_label    |  short_composition  | is_discontinued | available |                               search_vector
+
+--------+--------+--------------------------+-------------------------+-------------------------+-----------+--------+-----------------------+---------------------+-----------------+-----------+----------------------------------------------------------------------------
+  71161 | 71161  | Paracetamol O Tablet     | Makers Laboratories Ltd | Makers Laboratories Ltd | allopathy | 106.43 | bottle of 500 tablets | Paracetamol (NA)    | t               | f         | 'laboratori':7 'ltd':8 'maker':6 'na':5 'o':2 'paracetamol':1,4 'tablet':3
+ 629093 | 629093 | Paracet Tablet           | AP Medicare             | AP Medicare             | allopathy |     21 | strip of 10 tablets   | Paracetamol (650mg) | f               | f         | '650mg':4 'ap':5 'medicar':6 'paracet':1 'paracetamol':3 'tablet':2
+ 552383 | 552383 | Paracetamol 500mg Tablet | Lyka Labs               | Lyka Labs               | allopathy |    350 | jar of 1000 tablets   | Paracetamol (500mg) | f               | f         | '500mg':2,5 'lab':7 'lyka':6 'paracetamol':1,4 'tablet':3
+(3 rows)
+
+
+medicinedb=# -- Replace 'user_input' with whatever the user types
+medicinedb=# SELECT name
+medicinedb-# FROM medicines
+medicinedb-# WHERE name ILIKE 'user_input%'   -- matches all medicines starting with input
+medicinedb-# ORDER BY name
+medicinedb-# LIMIT 20;                        -- limit results for performance
+ name
+------
+(0 rows)
+
+
+medicinedb=# SELECT name
+medicinedb-# FROM medicines
+medicinedb-# WHERE name ILIKE '%' || 'user_input' || '%'
+medicinedb-# ORDER BY name
+medicinedb-# LIMIT 20;
+ name
+------
+(0 rows)
+
+
+medicinedb=# SELECT name
+medicinedb-# FROM medicines
+medicinedb-# WHERE name % 'user_input'
+medicinedb-# ORDER BY similarity(name, 'user_input') DESC
+medicinedb-# LIMIT 20;
+ name
+------
+(0 rows)
+
+
+medicinedb=#
+medicinedb=# SELECT name
+medicinedb-# FROM medicines
+medicinedb-# WHERE name ILIKE 'pa%'   -- for medicines starting with "pa"
+medicinedb-# ORDER BY name
+medicinedb-# LIMIT 20;
+             name
+-------------------------------
+ PA 12 Tablet SR
+ PA 125mg/5ml Suspension
+ PA 250mg/5ml Suspension
+ PA 500mg Tablet
+ PA 650mg Tablet
+ PA Cold AF Syrup
+ PA Cold Tablet
+ Pa Plus 0.25mg/20mg Tablet
+ Paa 40mg Tablet
+ Paa D 10mg/40mg Tablet
+ Paa DSR 30mg/40mg Capsule
+ Paa Kid Tablet
+ Paa Plus Tablet
+ Paa Tablet
+ Paab D 30mg/40mg Capsule SR
+ Paanrin 40mg Injection
+ Paanrin DSR 30mg/40mg Capsule
+ Paanta 40mg Tablet
+ Paanta D 10mg/40mg Tablet
+ Paar-TM Tablet
+(20 rows)
+
+
+medicinedb=# \c medicinedb
+You are now connected to database "medicinedb" as user "postgres".
+medicinedb=# \dt
+            List of tables
+ Schema |   Name    | Type  |  Owner
+--------+-----------+-------+----------
+ public | medicines | table | postgres
+(1 row)
+
+
+medicinedb=#
