@@ -171,6 +171,8 @@ Optimized for quick retrieval (~ms level response**).
 
 
 ---
+```bash
+
 
 ## 7. Features
 
@@ -182,5 +184,6 @@ Optimized for quick retrieval (~ms level response**).
 * Clear & well-documented *README.md*
 
 ---
+
 
 
